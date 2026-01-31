@@ -70,7 +70,7 @@ public class limetest extends LinearOpMode {
 //                telemetry.addData("Servo Position", servo.getPosition());
 //                telemetry.update();
 
-            LLResult result = limelight.getLatestResult();
+            LLResult result = limelight.getLatestResult(); 
 
             if ((result.getTx()) < 0){
                 rotate.setPower(-0.1);
