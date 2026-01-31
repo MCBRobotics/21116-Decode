@@ -167,7 +167,7 @@ public class testintake extends LinearOpMode {
                 intake.setPower(0);
 
                 if (gamepad1.y) {
-                    servo1.setPosition(1.0);
+                //    servo1.setPosition(1.0);
                 }
                 if (gamepad1.x) {
                     servo.setPosition(0.0);
