@@ -3,101 +3,93 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
-import java.util.List;
-
-
-@TeleOp(name="limetest", group="Linear OpMode")
-//@Disabled
+@TeleOp(name = "Limelight rotating working", group = "Vision")
 public class limetest extends LinearOpMode {
 
-    // Declare OpMode members for each of the 4 motors.
-    private ElapsedTime runtime = new ElapsedTime();
-
-    private DcMotor rotate = null;
-    //    private DcMotor leftBackDrive = null;
-
+    private DcMotor rotate;
     private Limelight3A limelight;
 
+    /* ===== TUNING ===== */
+    private static final double kP = 0.01;
+    private static final double MAX_POWER = 0.25;
+    private static final double TX_DEADBAND = 1.0;
 
     @Override
     public void runOpMode() {
 
-
         rotate = hardwareMap.get(DcMotor.class, "rotate");
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
+        rotate.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        telemetry.setMsTransmissionInterval(20);
 
-        telemetry.addData("Status", limelight.isConnected());
+        telemetry.addLine("Limelight init complete");
         telemetry.update();
-        telemetry.setMsTransmissionInterval(11);
-        limelight.pipelineSwitch(0);
+
+        limelight.pipelineSwitch(0); // AprilTag pipeline
         limelight.start();
+
         waitForStart();
-        runtime.reset();
-        // run until the end of the match (driver presses STOP)
+
         while (opModeIsActive()) {
 
-            // testing the intake and kicker
-            if (gamepad1.dpad_up) {
-                rotate.setPower(0.1);     // forward hi
-//            } else if (gamepad1.dpad_down) {
-//                intake.setPower(1);    // reverse
-            } else if (gamepad1.dpad_down){
-                rotate.setPower(-0.1);
-            }
-            else{
-                rotate.setPower(0);
-            }
+            double rotatePower = 0.0;
 
+            LLResult result = limelight.getLatestResult();
 
+            telemetry.addLine("===== LIMELIGHT DEBUG =====");
 
-//                telemetry.addData("Triangle(Y)", gamepad1.y);
-//                telemetry.addData("Square (X)", gamepad1.x);
-//                telemetry.addData("Servo Position", servo.getPosition());
-//                telemetry.update();
+            if (result == null) {
+                telemetry.addLine("Result: NULL (no data yet)");
+            } else {
+                telemetry.addData("Target Valid", result.isValid());
+                telemetry.addData("tx (horizontal error)", result.getTx());
+                telemetry.addData("ty (vertical error)", result.getTy());
+                telemetry.addData("ta (target area)", result.getTa());
 
-            LLResult result = limelight.getLatestResult(); 
-
-            if ((result.getTx()) < 0){
-                rotate.setPower(-0.1);
-            } else if ((result.getTx()) < 0){
-                rotate.setPower(0.1);
-            }
-
-            if (result != null) {
-                if (result.isValid()) {
-                    Pose3D botpose = result.getBotpose();
-                    telemetry.addData("power", 0.1);
-                    telemetry.addData("tx", result.getTx());
-                    telemetry.addData("ty", result.getTy());
-                    telemetry.addData("Botpose", botpose.toString());
+                Pose3D botpose = result.getBotpose();
+                if (botpose != null) {
+                    telemetry.addData("BotPose", botpose.toString());
                 }
-            }           // Send calculated power to wheels
 
+                /* ===== AUTO TRACK ARM ===== */
+                if (result.isValid()) {
+                    double tx = result.getTx();
+
+                    if (Math.abs(tx) > TX_DEADBAND) {
+                        rotatePower = tx * kP;
+                    } else {
+                        rotatePower = 0.0;
+                    }
+
+                    rotatePower = Math.max(
+                            -MAX_POWER,
+                            Math.min(MAX_POWER, rotatePower)
+                    );
+                }
+            }
+
+            /* ===== MANUAL OVERRIDE ===== */
+            if (gamepad1.dpad_up) {
+                rotatePower = 0.2;
+                telemetry.addLine("MANUAL: DPAD UP");
+            } else if (gamepad1.dpad_down) {
+                rotatePower = -0.2;
+                telemetry.addLine("MANUAL: DPAD DOWN");
+            }
+
+            rotate.setPower(rotatePower);
+
+            telemetry.addLine("===== ARM DEBUG =====");
+            telemetry.addData("Rotate Power", rotatePower);
 
             telemetry.update();
-
-            if (isStopRequested()) {
-                return;
-            }
         }
-    }}
-
-
-
-
-
+    }
+}

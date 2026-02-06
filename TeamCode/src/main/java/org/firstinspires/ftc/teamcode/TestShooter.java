@@ -39,14 +39,8 @@ public class TestShooter extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 motors.
     private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor leftFrontDrive = null;
-    //    private DcMotor leftBackDrive = null;
-    private DcMotor rightFrontDrive = null;
-    private DcMotor rightBackDrive = null;
 
-    private DcMotor leftBackDrive = null;
-
-    private DcMotor LeftShooter = null;
+    private DcMotor shooter = null;
    // private DcMotor RightShooter = null;
 
     @Override
@@ -58,7 +52,7 @@ public class TestShooter extends LinearOpMode {
         //leftBackDrive  = hardwareMap.get(DcMotor.class, "left_back_drive");
         //rightFrontDrive = hardwareMap.get(DcMotor.class, "right_front_drive");
         //rightBackDrive = hardwareMap.get(DcMotor.class, "right_back_drive");
-        LeftShooter = hardwareMap.get(DcMotor.class, "LeftShooter");
+        shooter = hardwareMap.get(DcMotor.class, "shooter");
        // RightShooter = hardwareMap.get(DcMotor.class, "RightShooter");
 
         // ########################################################################################
@@ -77,9 +71,9 @@ public class TestShooter extends LinearOpMode {
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);*/
 
 
-        LeftShooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
       //  RightShooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        LeftShooter.setDirection(DcMotor.Direction.REVERSE);
+        shooter.setDirection(DcMotor.Direction.REVERSE);
       //  RightShooter.setDirection(DcMotor.Direction.REVERSE);
 
         // Wait for the game to start (driver presses START)
@@ -92,30 +86,9 @@ public class TestShooter extends LinearOpMode {
         while (opModeIsActive()) {
             double max;
 
-            // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
-            double axial   = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
-            double lateral =  gamepad1.left_stick_x;
-            double yaw     =  gamepad1.right_stick_x;
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
-            // Set up a variable for each drive wheel to save the power level for telemetry.
-            double leftFrontPower  = axial + lateral + yaw;
-            double rightFrontPower = axial - lateral - yaw;
-            double leftBackPower   = axial - lateral + yaw;
-            double rightBackPower  = axial + lateral - yaw;
 
-            // Normalize the values so no wheel power exceeds 100%
-            // This ensures that the robot maintains the desired motion.
-            max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
-            max = Math.max(max, Math.abs(leftBackPower));
-            max = Math.max(max, Math.abs(rightBackPower));
-
-            if (max > 1.0) {
-                leftFrontPower  /= max;
-                rightFrontPower /= max;
-                leftBackPower   /= max;
-                rightBackPower  /= max;
-            }
 
             /*
             to find the power:
@@ -126,33 +99,15 @@ public class TestShooter extends LinearOpMode {
 
             if(gamepad2.dpad_up){
                // RightShooter.setPower(1);
-                LeftShooter.setPower(.8);
+                shooter.setPower(.8);
             }
             else if (gamepad2.dpad_down){
                // RightShooter.setPower(0);
-                LeftShooter.setPower(0);
+                shooter.setPower(0);
 
             }
 
-            /*// Send calculated power to wheels
-            leftFrontDrive.setPower(leftFrontPower);
-            rightFrontDrive.setPower(rightFrontPower);
-            leftBackDrive.setPower(leftBackPower);
-            rightBackDrive.setPower(rightBackPower);*/
-
-
-            //telemetry.addData("difference Test", differenceInArms);
-            //telemetry.addData("targetPosition Test", targetPosition);
-           // telemetry.addData("targetPositionArm2 Test", targetPositionArm2);
-           // telemetry.addData("zeroPositionArm1 Test", zeroPositionArm1);
-          //  telemetry.addData("zeroPositionArm2 Test", zeroPositionArm2);
-
-            // Show the elapsed game time and wheel power.
-            //telemetry.addData("Arm1 Test", LeftShooter.getCurrentPosition());
-           // telemetry.addData("Arm2 Test", RightShooter.getCurrentPosition());
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
-            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
             telemetry.update();
         }
     }

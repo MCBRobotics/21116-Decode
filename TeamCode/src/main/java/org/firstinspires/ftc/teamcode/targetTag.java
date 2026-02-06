@@ -18,12 +18,12 @@ import java.util.List;
  *  - Adds deadband, hysteresis, low-pass filtering, and derivative damping
  *  - Stops motor when no tag or small error
  */
-@TeleOp(name = "Sensor: Limelight3A (Tag 23 Stable)", group = "Testing")
-public class TargetTag extends LinearOpMode {
+@TeleOp(name = "Sensor: Limelight3A (Tag 22 Stable)", group = "Testing")
+public class targetTag extends LinearOpMode {
 
     // ---------- Tuning constants (feel free to adjust) ----------
-    private static final int    TARGET_ID        = 23;    // tag to track
-    private static final double kP               = 0.020; // proportional gain
+    private static final int    TARGET_ID        = 22;    // tag to track
+    private static final double kP               = 0.010; // proportional gain
     private static final double kD               = 0.0025;// derivative (damping)
     private static final double DEAD_BAND_DEG    = 1.0;   // no motion inside ±1.0°
     private static final double HYSTERESIS_EXTRA = 0.5;   // extra to re-engage after stop
