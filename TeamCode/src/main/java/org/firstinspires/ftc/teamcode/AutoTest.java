@@ -32,9 +32,7 @@ public class AutoTest extends OpMode {
     private final Pose pickup3Pose = new Pose(23, 35, Math.toRadians(180)); // row closest to loading zone
     private final Pose red_Score = new Pose(80, 80, Math.toRadians(40)); // where we shoot red side
     private final Pose red_loadPose = new Pose(140, 5, Math.toRadians(0)); // red loading zone
-
     private final Pose red_pickup1Pose = new Pose(121, 84.85, Math.toRadians(0));
-
     private final Pose red_pickup2Pose = new Pose(121, 60, Math.toRadians(0));
     private final Pose red_pickup3Pose = new Pose(121, 35, Math.toRadians(0));
     private Path start_path;
@@ -50,8 +48,10 @@ public class AutoTest extends OpMode {
         while (!(opmodeTimer.getElapsedTimeSeconds() > currentTime + 2)) {
             shooter.setPower(1.0);
         }
+        blocker.setPosition(1.0);
         pusher.setPosition(1.0);
         pusher.setPosition(0.0);
+        blocker.setPosition(0.0);
         shooter.setPower(0.0);
     };
 

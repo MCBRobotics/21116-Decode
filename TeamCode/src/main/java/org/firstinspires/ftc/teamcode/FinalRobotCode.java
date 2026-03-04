@@ -139,8 +139,10 @@ public class FinalRobotCode extends LinearOpMode {
                 while (!(opmodeTimer.getElapsedTimeSeconds() > currentTime + 2)) {
                     shooter.setPower(1.0);
                 }
+                blocker.setPosition(1.0);
                 pusher.setPosition(1.0);
                 pusher.setPosition(0.0);
+                blocker.setPosition(0.0);
                 shooter.setPower(0.0);
             }
             else shooter.setPower(0.0);
