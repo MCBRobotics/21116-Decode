@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -17,7 +18,7 @@ public class FinalRobotCode extends LinearOpMode {
     /* Hardware Members */
     private DcMotor leftFrontDrive, rightFrontDrive, leftBackDrive, rightBackDrive;
     private DcMotor rotate, intake, shooter;
-    private Servo kicker, pusher, hood;
+    private Servo blocker, pusher, hood;
     private Limelight3A limelight;
 
     /* Limelight Tuning Constants */
@@ -31,6 +32,8 @@ public class FinalRobotCode extends LinearOpMode {
     /* State tracking for toggle/button debouncing */
     private boolean lastLeftBumper = false;
     private boolean lastRightBumper = false;
+
+    private Timer opmodeTimer;
 
     @Override
     public void runOpMode() {
@@ -49,8 +52,8 @@ public class FinalRobotCode extends LinearOpMode {
         rotate  = hardwareMap.get(DcMotor.class, "rotate");
         intake  = hardwareMap.get(DcMotor.class, "intake");
         shooter = hardwareMap.get(DcMotor.class, "shooter");
-        hood = hardwareMap.get(Servo.class, "hood"); // TODO add the hood servo to the config
-        kicker  = hardwareMap.get(Servo.class, "kicker");
+        hood = hardwareMap.get(Servo.class, "hood");
+        blocker = hardwareMap.get(Servo.class, "blocker");
         pusher  = hardwareMap.get(Servo.class, "pusher");
 
         rotate.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -138,45 +141,21 @@ public class FinalRobotCode extends LinearOpMode {
 
             rotate.setPower(rotatePower);
 
-
-
             // --- SECTION 3: MECHANISMS (INTAKE, SHOOTER, SERVOS) ---
+            // assign face buttons to back buttons on Matthew's controller
+            if (gamepad1.a) intake.setPower(1.0);
+            else intake.setPower(0.0);
 
-            // Intake (Motor) - Spin while A is pressed
-            if (gamepad1.a) intake.setPower(-0.8);
-            else intake.setPower(0);
-
-            // Shooter (Motor) - Spin while B is pressed
-            if (gamepad1.b) shooter.setPower(1.0);
-            else shooter.setPower(0);
-
-            // Kicker (Servo) - Continuous rotation while X is pressed
-            // (Assumes continuous rotation servo where 1.0 is full speed one way)
-            if (gamepad1.x) kicker.setPosition(1.0);
-            else kicker.setPosition(0.5); // 0.5 is usually "Stop" for CR Servos
-
-            // Pusher (Servo) - Continuous rotation while Y is pressed
-            if (gamepad1.y) pusher.setPosition(1);
-            else pusher.setPosition(0.5); // reset by moving down:
-
-            // Hood (Servo) - Moves up and down (ideally we want limelight to do this)
-            if ((gamepad1.right_trigger) > 0.0) { // right_trigger returns float
-                if (gamepad1.right_bumper) {
-                    hood.setPosition(hood.getPosition() + 0.1);
-               } else if (gamepad1.left_bumper) {
-                    hood.setPosition(hood.getPosition() - 0.1);
+            if (gamepad1.b) {
+                double currentTime = opmodeTimer.getElapsedTimeSeconds();
+                while (!(opmodeTimer.getElapsedTimeSeconds() > currentTime + 2)) {
+                    shooter.setPower(1.0);
                 }
-            } // Marwan added this in anticipation of the new variable-hood shooter
-
-
-            /*
-            * if (gamepad.b) {
-            *
-            * }
-            *
-            *
-            * */
-
+                pusher.setPosition(1.0);
+                pusher.setPosition(0.0);
+                shooter.setPower(0.0);
+            }
+            else shooter.setPower(0.0);
 
             // --- SECTION 4: TELEMETRY ---
             telemetry.addData("Target ID", targetTagID);
