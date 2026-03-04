@@ -68,18 +68,6 @@ public class FinalRobotCode extends LinearOpMode {
 
         waitForStart();
 
-        /*
-        * all button mappings:
-        * Left stick: forward and backward, strafe left and right
-        * right stick, rotate (change heading) left and right
-        * a: intake
-        * b: shooter
-        * x: kicker on intake
-        * y: pusher on shooter
-        * bumpers:  limelight targettagID
-        * dpad up/down: override limelight rotation
-        * right trigger then bumpers: change hood angle */
-
         while (opModeIsActive()) {
 
             // --- SECTION 1: MECANUM DRIVE ---
