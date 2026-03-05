@@ -136,16 +136,16 @@ public class FinalRobotCode extends LinearOpMode {
 
             if (gamepad1.b) {
                 double currentTime = opmodeTimer.getElapsedTimeSeconds();
-                while (!(opmodeTimer.getElapsedTimeSeconds() > currentTime + 2)) {
-                    shooter.setPower(1.0);
+                while (opmodeTimer.getElapsedTimeSeconds() < (currentTime + 1.5)) { // wait for a certain time without using sleep
+                    shooter.setPower(1.0); // TODO confirm shooter direction
                 }
-                blocker.setPosition(1.0);
-                pusher.setPosition(1.0);
-                pusher.setPosition(0.0);
-                blocker.setPosition(0.0);
+                blocker.setPosition(0.0); // retract blocker
+                pusher.setPosition(1.0); // push ball into shooter
+            } else {
                 shooter.setPower(0.0);
+                blocker.setPosition(1.0); // TODO confirm blocker positions
+                pusher.setPosition(0.0);
             }
-            else shooter.setPower(0.0);
 
             // --- SECTION 4: TELEMETRY ---
             telemetry.addData("Target ID", targetTagID);

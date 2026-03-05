@@ -42,7 +42,7 @@ public class AutoTest extends OpMode {
     // We need to be able to navigate our side without bumping into the other team.
     // These paths should move the robot in a counter-clockwise rotation.
     // Inevitably, we'll need to change and update the paths and state machine to suit the alliance.
-
+    // TODO change shoot_shooter runnable
     Runnable shoot_shooter = () -> { // callbacks in the paths require "Runnables"
         double currentTime = opmodeTimer.getElapsedTimeSeconds();
         while (!(opmodeTimer.getElapsedTimeSeconds() > currentTime + 2)) {
