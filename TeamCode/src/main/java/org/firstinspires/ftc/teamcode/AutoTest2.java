@@ -57,7 +57,9 @@ public class AutoTest2 extends OpMode {
 
     /* ---------------- SHOOT CALLBACK ---------------- */
 
-    Runnable shootShooter = () -> shooter.setPower(1.0);
+    Runnable shootShooter = () -> {
+        shooter.setPower(1.0);
+    };
 
     /* ---------------- CREATE PATHS ---------------- */
 
