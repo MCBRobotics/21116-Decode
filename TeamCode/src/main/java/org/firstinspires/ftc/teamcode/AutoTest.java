@@ -3,11 +3,9 @@ package org.firstinspires.ftc.teamcode;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
-import com.pedropathing.geometry.BezierPoint;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
-import com.pedropathing.paths.PathConstraints;
 import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -20,7 +18,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 @Autonomous (name = "Decode Auto", group = "Autonomous")
 public class AutoTest extends OpMode {
     private Follower follower;
-    private Timer pathTimer, actionTimer, opmodeTimer;
+    private Timer pathTimer, opmodeTimer;
     private int pathState;
     private DcMotor rotate, intake, shooter;
     private Servo blocker, pusher, hood;
@@ -35,24 +33,16 @@ public class AutoTest extends OpMode {
     private final Pose red_pickup1Pose = new Pose(121, 84.85, Math.toRadians(0));
     private final Pose red_pickup2Pose = new Pose(121, 60, Math.toRadians(0));
     private final Pose red_pickup3Pose = new Pose(121, 35, Math.toRadians(0));
-    private Path start_path;
     private PathChain load_path, pickup_path1, pickup_path2, pickup_path3, red_loadPath, redpickup_path1, redpickup_path2, redpickup_path3;
-    private boolean BlueAlliance;
+
 
     // We need to be able to navigate our side without bumping into the other team.
     // These paths should move the robot in a counter-clockwise rotation.
     // Inevitably, we'll need to change and update the paths and state machine to suit the alliance.
     // TODO change shoot_shooter runnable
-    Runnable shoot_shooter = () -> { // callbacks in the paths require "Runnables"
-        double currentTime = opmodeTimer.getElapsedTimeSeconds();
-        while (!(opmodeTimer.getElapsedTimeSeconds() > currentTime + 2)) {
-            shooter.setPower(1.0);
-        }
-        blocker.setPosition(1.0);
-        pusher.setPosition(1.0);
-        pusher.setPosition(0.0);
-        blocker.setPosition(0.0);
-        shooter.setPower(0.0);
+    // This runnable and path callbacks are to avoid blocking threads
+    Runnable shoot_shooter = () -> {
+      shooter.setPower(1.0);
     };
 
     private void createPaths() {
@@ -132,7 +122,7 @@ public class AutoTest extends OpMode {
                 .addParametricCallback(0.3, () -> intake.setPower(-0.8))
                 .addParametricCallback(1.0, () -> intake.setPower(0))
                 .addPath(new BezierCurve(red_pickup3Pose, new Pose(69, 30), red_Score))
-                .setLinearHeadingInterpolation(red_pickup3Pose.getHeading(), scorePose.getHeading())
+                .setLinearHeadingInterpolation(red_pickup3Pose.getHeading(), red_Score.getHeading())
                 .addParametricCallback(1.0, shoot_shooter)
                 .build();
 
@@ -161,20 +151,27 @@ public class AutoTest extends OpMode {
         if (BlueAlliance) {
             switch (pathState) {
                 case 0:
-                    follower.followPath(load_path);
-                    if (!pickedup1) {
-                        changePath(1);
+                    if (!follower.isBusy()) {
+                        follower.followPath(load_path);
                     }
-                    if (!pickedup2) {
-                        changePath(2);
+                    if (!follower.isBusy()) {
+                        if (!pickedup1) {
+                            changePath(1);
+                        }
+                        if (!pickedup2) {
+                            changePath(2);
+                        }
+                        if (!pickedup3) {
+                            changePath(3);
+                        }
                     }
-                    if (!pickedup3) {
-                        changePath(3);
-                    }
+                    break;
                 case 1:
                     follower.followPath(pickup_path1);
                     pickedup1 = true;
-                    changePath(2);
+                    if (!follower.isBusy()) {
+                        changePath(2);
+                    }
                     break;
                 case 2:
                     follower.followPath(pickup_path2);
@@ -189,20 +186,24 @@ public class AutoTest extends OpMode {
             switch (pathState) {
                 case 0:
                     follower.followPath(red_loadPath);
-                    if (!pickedup1) {
-                        changePath(1);
-                    }
-                    if (!pickedup2) {
-                        changePath(2);
-                    }
-                    if (!pickedup3) {
-                        changePath(3);
+                    if (!follower.isBusy()) {
+                        if (!pickedup1) {
+                            changePath(1);
+                        }
+                        if (!pickedup2) {
+                            changePath(2);
+                        }
+                        if (!pickedup3) {
+                            changePath(3);
+                        }
                     }
                     break;
                 case 1:
                     follower.followPath(redpickup_path1);
                     pickedup1 = true;
-                    changePath(2);
+                    if (!follower.isBusy()) {
+                        changePath(2);
+                    }
                     break;
                 case 2:
                     follower.followPath(redpickup_path2);
@@ -231,6 +232,9 @@ public class AutoTest extends OpMode {
         createPaths();
     }
 
+    private boolean BlueAlliance = true;
+
+    @Override
     public void init_loop() {
         if (gamepad1.left_bumper) {
             BlueAlliance = true;
@@ -242,12 +246,14 @@ public class AutoTest extends OpMode {
     }
 
     // Called once when we hit PLAY
+    @Override
     public void start() {
         opmodeTimer.resetTimer();
         changePath(0);
     }
 
     // LOOPS as the op mode is running
+    @Override
     public void loop() {
         follower.update();
         PathUpdate();
@@ -257,7 +263,7 @@ public class AutoTest extends OpMode {
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
-        telemetry.addData("time left", opmodeTimer.getElapsedTimeSeconds());
+        telemetry.addData("time left", 30 - opmodeTimer.getElapsedTimeSeconds());
         telemetry.update();
 
         if (opmodeTimer.getElapsedTimeSeconds() > 30.0) {

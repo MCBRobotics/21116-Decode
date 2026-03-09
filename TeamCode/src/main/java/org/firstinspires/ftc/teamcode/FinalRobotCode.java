@@ -12,7 +12,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import java.util.List;
 
-@TeleOp(name = "Robot: Final", group = "Main")
+@TeleOp(name = "TeleOp", group = "Main")
 public class FinalRobotCode extends LinearOpMode {
 
     /* Hardware Members */
