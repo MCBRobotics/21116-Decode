@@ -59,7 +59,6 @@ public class AutoTest2 extends OpMode {
     /* ---------------- SHOOT CALLBACK ---------------- */
 
     Runnable shootShooter = () -> {
-        laststate = state
         state = AutoState.SHOOTING;
     };
 
