@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "Decode Auto", group = "Autonomous")
@@ -20,7 +21,12 @@ public class AutoTest2 extends OpMode {
     private DcMotor rotate, intake, shooter;
     private Servo blocker, pusher, hood;
 
-    private boolean BlueAlliance = true;
+    private enum Alliance {
+        BLUE,
+        RED
+    }
+
+    private Alliance alliance = Alliance.BLUE;
 
     /* ---------------- AUTO STATE MACHINE ---------------- */
 
@@ -70,7 +76,6 @@ public class AutoTest2 extends OpMode {
                 .addPath(new BezierCurve(scorePose, new Pose(72, 30), loadPose))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), loadPose.getHeading())
                 .addParametricCallback(1.0, () -> intake.setPower(-0.8))
-
                 .addPath(new BezierCurve(loadPose, new Pose(72, 30), scorePose))
                 .setLinearHeadingInterpolation(loadPose.getHeading(), scorePose.getHeading())
                 .addParametricCallback(0.2, () -> intake.setPower(0))
@@ -178,7 +183,6 @@ public class AutoTest2 extends OpMode {
 
                 if (!follower.isBusy()) {
                     follower.followPath(BlueAlliance ? loadPath : redLoadPath);
-                    state = AutoState.PICKUP1;
                 }
 
                 break;
@@ -211,8 +215,11 @@ public class AutoTest2 extends OpMode {
                 break;
 
             case SHOOTING:
+
                 break;
+
             case IDLE:
+
                 break;
         }
     }
@@ -236,6 +243,7 @@ public class AutoTest2 extends OpMode {
         if (gamepad1.left_bumper) {
             BlueAlliance = true;
             follower.setStartingPose(scorePose);
+            telemetry.addData("Auto Alliance Mode:", BlueAlliance)
         }
 
         if (gamepad1.right_bumper) {

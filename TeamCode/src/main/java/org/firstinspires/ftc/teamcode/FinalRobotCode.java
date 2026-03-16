@@ -12,7 +12,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import java.util.List;
 
-@TeleOp(name = "TeleOp", group = "Main")
+@TeleOp(name = "TeleOp Decode", group = "Main")
 public class FinalRobotCode extends LinearOpMode {
 
     /* Hardware Members */
@@ -32,8 +32,6 @@ public class FinalRobotCode extends LinearOpMode {
     /* State tracking for toggle/button debouncing */
     private boolean lastLeftBumper = false;
     private boolean lastRightBumper = false;
-
-    private Timer opmodeTimer;
 
     @Override
     public void runOpMode() {
@@ -135,16 +133,7 @@ public class FinalRobotCode extends LinearOpMode {
             else intake.setPower(0.0);
 
             if (gamepad1.b) {
-                double currentTime = opmodeTimer.getElapsedTimeSeconds();
-                while (opmodeTimer.getElapsedTimeSeconds() < (currentTime + 1.5)) { // wait for a certain time without using sleep
-                    shooter.setPower(1.0); // TODO confirm shooter direction
-                }
-                blocker.setPosition(0.0); // retract blocker
-                pusher.setPosition(1.0); // push ball into shooter
-            } else {
-                shooter.setPower(0.0);
-                blocker.setPosition(1.0); // TODO confirm blocker positions
-                pusher.setPosition(0.0);
+
             }
 
             // --- SECTION 4: TELEMETRY ---
