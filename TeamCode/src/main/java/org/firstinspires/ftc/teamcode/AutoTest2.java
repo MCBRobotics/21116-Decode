@@ -29,10 +29,11 @@ public class AutoTest2 extends OpMode {
         PICKUP1,
         PICKUP2,
         PICKUP3,
-        IDLE
+        IDLE,
+        SHOOTING
     }
 
-    private AutoState state;
+    private AutoState state, laststate;
 
     /* ---------------- FIELD POSES ---------------- */
 
@@ -58,7 +59,8 @@ public class AutoTest2 extends OpMode {
     /* ---------------- SHOOT CALLBACK ---------------- */
 
     Runnable shootShooter = () -> {
-        shooter.setPower(1.0);
+        laststate = state
+        state = AutoState.SHOOTING;
     };
 
     /* ---------------- CREATE PATHS ---------------- */
@@ -160,7 +162,6 @@ public class AutoTest2 extends OpMode {
         rotate = hardwareMap.get(DcMotor.class, "rotate");
         intake = hardwareMap.get(DcMotor.class, "intake");
         shooter = hardwareMap.get(DcMotor.class, "shooter");
-
         hood = hardwareMap.get(Servo.class, "hood");
         blocker = hardwareMap.get(Servo.class, "blocker");
         pusher = hardwareMap.get(Servo.class, "pusher");
@@ -210,6 +211,8 @@ public class AutoTest2 extends OpMode {
 
                 break;
 
+            case SHOOTING:
+                break;
             case IDLE:
                 break;
         }
