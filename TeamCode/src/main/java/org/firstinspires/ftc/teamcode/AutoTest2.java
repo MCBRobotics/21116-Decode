@@ -11,7 +11,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-
 @Autonomous(name = "Decode Auto", group = "Autonomous")
 public class AutoTest2 extends OpMode {
 
