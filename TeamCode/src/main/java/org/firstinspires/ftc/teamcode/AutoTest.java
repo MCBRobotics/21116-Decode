@@ -139,7 +139,6 @@ public class AutoTest extends OpMode {
 
         rotate.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
-
     private boolean pickedup1 = false;
     private boolean pickedup2 = false;
     private boolean pickedup3 = false;
