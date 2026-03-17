@@ -14,11 +14,6 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 /**
  * AutoDecode — FTC 2025-26 Autonomous
- * Strategy (in priority order):
- *   1. Pick up field balls (3 rows)
- *   2. Shoot into goal
- *   3. Load zone pickup
- *   4. Park (implicit — robot stays near goal after final shot)
  * Alliance is selected and paths and poses finalised during init_loop via gamepad bumpers.
  * All hardware names match FinalRobotCode.java and Constants.java.
  * State machine overview:
@@ -35,8 +30,8 @@ public class AutoDecode extends OpMode {
     // Hardware
     // -------------------------------------------------------------------------
     private Follower follower;
-    private DcMotor  intake;
-    private DcMotor  shooter;
+    private DcMotor intake;
+    private DcMotor shooter;
 
     // -------------------------------------------------------------------------
     // Timers
