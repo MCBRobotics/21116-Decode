@@ -437,9 +437,7 @@ public class AutoDecode extends OpMode {
                 .build();
 
         // Score → Load zone (wide curve to stay clear of field balls)
-        Pose midLoad = blueAlliance
-                ? new Pose(72, 30, pScore.getHeading())
-                : new Pose(72, 30, pScore.getHeading());
+        Pose midLoad = new Pose(72, 30, pScore.getHeading());
 
         pathToLoad = follower.pathBuilder()
                 .addPath(new BezierCurve(pScore, midLoad, pLoad))
