@@ -18,7 +18,7 @@ public class FinalRobotCode extends LinearOpMode {
     /* Hardware Members */
     private DcMotor leftFrontDrive, rightFrontDrive, leftBackDrive, rightBackDrive;
     private DcMotor rotate, intake, shooter;
-    private Servo blocker, pusher, hood;
+    private Servo blocker, hood;
     private Limelight3A limelight;
 
     /* Limelight Tuning Constants */
@@ -54,7 +54,6 @@ public class FinalRobotCode extends LinearOpMode {
         shooter = hardwareMap.get(DcMotor.class, "shooter");
         hood = hardwareMap.get(Servo.class, "hood");
         blocker = hardwareMap.get(Servo.class, "blocker");
-        pusher  = hardwareMap.get(Servo.class, "pusher");
 
         rotate.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -135,16 +134,15 @@ public class FinalRobotCode extends LinearOpMode {
             else intake.setPower(0.0);
 
             if (gamepad1.b) {
-                double currentTime = opmodeTimer.getElapsedTimeSeconds();
-                while (opmodeTimer.getElapsedTimeSeconds() < (currentTime + 1.5)) { // wait for a certain time without using sleep
-                    shooter.setPower(1.0); // TODO confirm shooter direction
-                }
                 blocker.setPosition(0.0); // retract blocker
-                pusher.setPosition(1.0); // push ball into shooter
+            } else {
+                blocker.setPosition(1.0); // TODO confirm blocker positions
+                }
+
+            if (gamepad1.x) {
+                shooter.setPower(1.0);
             } else {
                 shooter.setPower(0.0);
-                blocker.setPosition(1.0); // TODO confirm blocker positions
-                pusher.setPosition(0.0);
             }
 
             // --- SECTION 4: TELEMETRY ---
