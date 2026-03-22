@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -16,17 +17,29 @@ public class FinalRobotCode extends LinearOpMode {
 
     /* Hardware Members */
     private DcMotor leftFrontDrive, rightFrontDrive, leftBackDrive, rightBackDrive;
-    private DcMotor rotate, intake, shooter;
-    private Servo kicker, pusher, hood;
+    private DcMotor rotate, shooter1, shooter2;
+    private Servo kicker, pusher;
+    private CRServo intake;
+
     private Limelight3A limelight;
 
     /* Limelight Tuning Constants */
-    private static final double kP = 0.02;
-    private static final double MAX_ROTATE_POWER = 0.25;
-    private static final double TX_DEADBAND = 1.2;
-    private static final double GAIN = 0.2; // Low-pass filter gain
+    // Proportional gain: scales how much rotate power is applied per degree of tx offset
+    private static final double kP = 0.03;
+    // Maximum power allowed to the rotate motor when vision-tracking (prevents violent spinning)
+    private static final double MAX_ROTATE_POWER = 0.4;
+    // Minimum tx (horizontal) offset (degrees) before rotation kicks in — prevents jitter when nearly centered
+    private static final double TX_DEADBAND = 0.5;
+    // Low-pass filter weight: higher = more responsive but noisier; lower = smoother but slower to react
+    private static final double GAIN = 0.2;
+    // Exponential moving average of tx — smooths out noisy Limelight readings frame-to-frame
     private double smoothedTx = 0;
+    // AprilTag ID currently being tracked; bumpers cycle this between 20–25
     private int targetTagID = 20;
+
+
+    private boolean kickerOn = false;
+    private boolean lastX = false;
 
     /* State tracking for toggle/button debouncing */
     private boolean lastLeftBumper = false;
@@ -35,11 +48,12 @@ public class FinalRobotCode extends LinearOpMode {
     @Override
     public void runOpMode() {
         // 1. Initialize Drivetrain
-        leftFrontDrive  = hardwareMap.get(DcMotor.class, "left_front_drive");
-        leftBackDrive   = hardwareMap.get(DcMotor.class, "left_back_drive");
-        rightFrontDrive = hardwareMap.get(DcMotor.class, "right_front_drive");
-        rightBackDrive  = hardwareMap.get(DcMotor.class, "right_back_drive");
+        leftFrontDrive  = hardwareMap.get(DcMotor.class, "lf");
+        leftBackDrive   = hardwareMap.get(DcMotor.class, "lb");
+        rightFrontDrive = hardwareMap.get(DcMotor.class, "rf");
+        rightBackDrive  = hardwareMap.get(DcMotor.class, "rb");
 
+        // Left-back is reversed so all wheels push the robot forward when given positive power
         leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -47,12 +61,21 @@ public class FinalRobotCode extends LinearOpMode {
 
         // 2. Initialize Mechanisms
         rotate  = hardwareMap.get(DcMotor.class, "rotate");
-        intake  = hardwareMap.get(DcMotor.class, "intake");
-        shooter = hardwareMap.get(DcMotor.class, "shooter");
-        hood = hardwareMap.get(Servo.class, "hood"); // TODO add the hood servo to the config
+        shooter1 = hardwareMap.get(DcMotor.class, "shooter1");
+        shooter2 = hardwareMap.get(DcMotor.class, "shooter2");
+
+        intake  = hardwareMap.get(CRServo.class, "intake");
+
         kicker  = hardwareMap.get(Servo.class, "kicker");
         pusher  = hardwareMap.get(Servo.class, "pusher");
 
+        shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooter2.setDirection(DcMotorSimple.Direction.REVERSE);
+        rotate.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        //intake.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        // BRAKE holds the turret in place when no input is given, preventing drift
         rotate.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // 3. Initialize Vision
@@ -80,10 +103,13 @@ public class FinalRobotCode extends LinearOpMode {
         while (opModeIsActive()) {
 
             // --- SECTION 1: MECANUM DRIVE ---
+            // Negate left_stick_y because pushing the stick forward gives a negative value on FTC gamepads
             double axial   = -gamepad1.left_stick_y;
             double lateral =  gamepad1.left_stick_x;
             double yaw     =  gamepad1.right_stick_x;
 
+            // Mecanum wheel mixing: each wheel gets a combination of axial, lateral, and yaw
+            // The signs come from the physical roller orientation of mecanum wheels
             double lf = axial + lateral + yaw;
             double rf = axial - lateral - yaw;
             double lb = axial - lateral + yaw;
@@ -118,9 +144,11 @@ public class FinalRobotCode extends LinearOpMode {
                 for (LLResultTypes.FiducialResult fr : fiducials) {
                     if (fr.getFiducialId() == targetTagID) {
                         tagFound = true;
-                        // Apply Smoothing Filter
+                        // Exponential moving average: blends new reading with previous smooth value
+                        // to reduce jitter from noisy camera detections
                         smoothedTx = (result.getTx() * GAIN) + (smoothedTx * (1.0 - GAIN));
 
+                        // Only rotate if the tag is outside the deadband — avoids oscillating when centered
                         if (Math.abs(smoothedTx) > TX_DEADBAND) {
                             rotatePower = smoothedTx * kP;
                         }
@@ -143,39 +171,51 @@ public class FinalRobotCode extends LinearOpMode {
             // --- SECTION 3: MECHANISMS (INTAKE, SHOOTER, SERVOS) ---
 
             // Intake (Motor) - Spin while A is pressed
-            if (gamepad1.a) intake.setPower(-0.8);
-            else intake.setPower(0);
+//            if (gamepad1.a) intake.setPower(1);
+//            else intake.setPower(0);
+
+            if (gamepad1.a) {
+                intake.setPower(-1);   // spin forward
+            } else {
+                intake.setPower(0);   // stop
+            }
+
 
             // Shooter (Motor) - Spin while B is pressed
-            if (gamepad1.b) shooter.setPower(1.0);
-            else shooter.setPower(0);
+            if (gamepad1.b) shooter1.setPower(1.0);
+            else shooter1.setPower(0);
 
-            // Kicker (Servo) - Continuous rotation while X is pressed
-            // (Assumes continuous rotation servo where 1.0 is full speed one way)
-            if (gamepad1.x) kicker.setPosition(1.0);
-            else kicker.setPosition(0.5); // 0.5 is usually "Stop" for CR Servos
+            // Shooter (Motor) - Spin while B is pressed
+            if (gamepad1.y) shooter2.setPower(1.0);
+            else shooter2.setPower(0);
 
-            // Pusher (Servo) - Continuous rotation while Y is pressed
-            if (gamepad1.y) pusher.setPosition(1);
-            else pusher.setPosition(0.5); // reset by moving down:
+            // Kicker (Continuous Rotation Servo): 0.5 = stop, <0.5 = reverse, >0.5 = forward
+            // 0.25 spins the kicker inward; 1.0 is full speed the other way (used as idle/stop here)
+//            if (gamepad1.x) kicker.setPosition(0.25);
+//            else kicker.setPosition(0.5);
 
-            // Hood (Servo) - Moves up and down (ideally we want limelight to do this)
-            if ((gamepad1.right_trigger) > 0.0) { // right_trigger returns float
-                if (gamepad1.right_bumper) {
-                    hood.setPosition(hood.getPosition() + 0.1);
-               } else if (gamepad1.left_bumper) {
-                    hood.setPosition(hood.getPosition() - 0.1);
-                }
-            } // Marwan added this in anticipation of the new variable-hood shooter
+            if (gamepad1.x && !lastX) {
+                kickerOn = !kickerOn; // flip state
+            }
+
+            if (kickerOn) {
+                kicker.setPosition(0.25);
+            } else {
+                kicker.setPosition(0.5);
+            }
+
+            lastX = gamepad1.x;
 
 
-            /*
-            * if (gamepad.b) {
-            *
-            * }
-            *
-            *
-            * */
+            // Hood angle (Servo) - triggers control tilt speed proportionally to press depth
+            // right_trigger tilts up, left_trigger tilts down; harder press = faster movement
+            // Max step per loop (0.02) keeps motion smooth — lower this if it moves too fast
+            double hoodStep = (gamepad1.right_trigger - gamepad1.left_trigger) * 0.02;
+            pusher.setPosition(Math.max(0.0, Math.min(1.0, pusher.getPosition() + hoodStep)));
+
+            // Quick-set overrides: dpad_left = full up (1.0), dpad_right = full down (0.0)
+            if (gamepad1.dpad_left) pusher.setPosition(1);
+            else if (gamepad1.dpad_right) pusher.setPosition(0);
 
 
             // --- SECTION 4: TELEMETRY ---
@@ -183,6 +223,8 @@ public class FinalRobotCode extends LinearOpMode {
             telemetry.addData("Vision Locked", tagFound);
             telemetry.addData("Rotate Power", "%.2f", rotatePower);
             telemetry.addData("Drive", "LF:%.2f RF:%.2f", lf, rf);
+            telemetry.addData("smoothedtx: ",smoothedTx);
+            telemetry.addData("rotate power: ",rotatePower);
             telemetry.update();
         }
     }
