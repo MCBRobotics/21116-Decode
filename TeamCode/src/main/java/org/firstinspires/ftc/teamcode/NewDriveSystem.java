@@ -44,7 +44,7 @@ public class NewDriveSystem extends LinearOpMode {
 
         imu.initialize(parameters);
         imu.resetYaw();
-        waitForStart():
+        waitForStart();
 
         while (opModeIsActive()) {
 
