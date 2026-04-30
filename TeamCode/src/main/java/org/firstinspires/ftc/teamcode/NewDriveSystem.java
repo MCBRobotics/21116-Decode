@@ -28,15 +28,11 @@ public class NewDriveSystem extends LinearOpMode {
         DcMotor leftBackDrive = hardwareMap.get(DcMotor.class, "leftbackdrive");
         DcMotor rightFrontDrive = hardwareMap.get(DcMotor.class, "rightfrontdrive");
         DcMotor rightBackDrive = hardwareMap.get(DcMotor.class, "rightbackdrive");
-        //DcMotor mechanism = hardwareMap.get(DcMotor.class, "mechanism");
 
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
-
-        //mechanism.setDirection(DcMotor.Direction.FORWARD);
-        //mechanism.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         IMU imu = hardwareMap.get(IMU.class, "imu");
         IMU.Parameters parameters = new IMU.Parameters(
@@ -79,12 +75,6 @@ public class NewDriveSystem extends LinearOpMode {
             if (gamepad2.b) {
                 imu.resetYaw();
             }
-
-            //if (gamepad2.a) {
-            //      mechanism.setPower(1);
-            //} else {
-            //      mechanism.setPower(0);
-            //}
 
         }
     }
