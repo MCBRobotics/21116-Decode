@@ -23,7 +23,6 @@ public class NewDriveSystem extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-
         DcMotor leftFrontDrive = hardwareMap.get(DcMotor.class, "leftfrontdrive");
         DcMotor leftBackDrive = hardwareMap.get(DcMotor.class, "leftbackdrive");
         DcMotor rightFrontDrive = hardwareMap.get(DcMotor.class, "rightfrontdrive");
