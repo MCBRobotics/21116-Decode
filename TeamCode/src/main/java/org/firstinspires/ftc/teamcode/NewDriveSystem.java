@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
-
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
@@ -20,7 +19,7 @@ public class NewDriveSystem extends OpMode {
 
     public double applyDeadzone(double joystick) {
         double deadzone_boundary = 0.1;
-        if (joystick < deadzone_boundary && joystick > -deadzone_boundary ) {
+        if (joystick < deadzone_boundary && joystick > -deadzone_boundary) {
             return 0.0;
         } else {
             return joystick;
@@ -48,10 +47,12 @@ public class NewDriveSystem extends OpMode {
         );
 
         imu.initialize(parameters);
-        imu.resetYaw();
-
     }
-    
+
+    public void init_loop() {
+        imu.resetYaw();
+    }
+
     @Override
     public void loop() {
         double axial = applyDeadzone(-gamepad1.left_stick_y);
