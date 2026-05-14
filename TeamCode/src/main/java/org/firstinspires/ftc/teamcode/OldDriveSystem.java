@@ -5,20 +5,20 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-@TeleOp (name = "NewDriveSystem", group = "TeleOp")
-public class NewDriveSystem extends OpMode {
-    
+@TeleOp(name = "OldDriveSystem", group = "TeleOp")
+public class OldDriveSystem extends OpMode {
+
     private DcMotor leftFrontDrive = null;
     private DcMotor leftBackDrive = null;
     private DcMotor rightFrontDrive = null;
     private DcMotor rightBackDrive = null;
-    private IMU imu = null;
 
-    double last_rotX = 0.0;
-    double last_rotY = 0.0;
+    double last_axial = 0.0;
+    double last_lateral = 0.0;
     double last_yaw = 0.0;
     double MAX_CHANGE = 0.03;
 
@@ -53,59 +53,32 @@ public class NewDriveSystem extends OpMode {
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
-        imu = hardwareMap.get(IMU.class, "imu");
-        IMU.Parameters parameters = new IMU.Parameters(
-                new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                        RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
-                )
-        );
-
-        imu.initialize(parameters);
-    }
-
-    @Override
-    public void init_loop() {
-        imu.resetYaw();
     }
 
     @Override
     public void loop() {
+
         double axial = applyDeadzone(-gamepad1.left_stick_y);
         double lateral = applyDeadzone(gamepad1.left_stick_x);
         double yaw = applyDeadzone(gamepad1.right_stick_x);
 
-        axial = Math.signum(axial) * Math.pow(axial, 2);
-        lateral = Math.signum(lateral) * Math.pow(lateral, 2);
-        yaw = Math.signum(yaw) * Math.pow(yaw, 2);
-
-        YawPitchRollAngles angles = imu.getRobotYawPitchRollAngles();
-        double heading = angles.getYaw(AngleUnit.RADIANS);
-
-        double rotX = lateral * Math.cos(-heading) - axial * Math.sin(-heading);
-        double rotY = lateral * Math.sin(-heading) + axial * Math.cos(-heading);
-
-        rotX = skew(rotX, last_rotX);
-        rotY = skew(rotY, last_rotY);
+        axial = skew(axial, last_axial);
+        lateral = skew(lateral, last_lateral);
         yaw = skew(yaw, last_yaw);
 
-        last_rotX = rotX;
-        last_rotY = rotY;
+        last_axial = axial;
+        last_lateral = lateral;
         last_yaw = yaw;
 
-        double leftfrontPower = rotY + rotX + yaw;
-        double rightfrontPower = rotY - rotX - yaw;
-        double leftbackPower = rotY - rotX + yaw;
-        double rightbackPower = rotY + rotX - yaw;
+        double leftfrontPower = axial + lateral + yaw;
+        double rightfrontPower = axial - lateral - yaw;
+        double leftbackPower = axial - lateral + yaw;
+        double rightbackPower = axial + lateral - yaw;
 
         leftFrontDrive.setPower(leftfrontPower);
         rightFrontDrive.setPower(rightfrontPower);
         leftBackDrive.setPower(leftbackPower);
         rightBackDrive.setPower(rightbackPower);
-            
-        if (gamepad2.b) {
-            imu.resetYaw();
-        }
+
     }
 }
-
