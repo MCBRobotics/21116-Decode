@@ -103,7 +103,7 @@ public class NewDriveSystem extends OpMode {
         leftBackDrive.setPower(leftbackPower);
         rightBackDrive.setPower(rightbackPower);
             
-        if (gamepad2.b) {
+        if (gamepad1.b) {
             imu.resetYaw();
         }
     }
