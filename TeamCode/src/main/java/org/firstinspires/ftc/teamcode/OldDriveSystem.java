@@ -15,7 +15,7 @@ public class OldDriveSystem extends OpMode {
     double last_axial = 0.0;
     double last_lateral = 0.0;
     double last_yaw = 0.0;
-    double MAX_CHANGE = 0.03;
+    double MAX_CHANGE = 0.3;
 
     public double applyDeadzone(double joystick) {
         double deadzone_boundary = 0.1;
