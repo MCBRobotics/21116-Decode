@@ -11,11 +11,16 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 @TeleOp (name = "NewDriveSystem", group = "TeleOp")
 public class NewDriveSystem extends OpMode {
     
-    DcMotor leftFrontDrive = null;
-    DcMotor leftBackDrive = null;
-    DcMotor rightFrontDrive = null;
-    DcMotor rightBackDrive = null;
-    IMU imu = null;
+    private DcMotor leftFrontDrive = null;
+    private DcMotor leftBackDrive = null;
+    private DcMotor rightFrontDrive = null;
+    private DcMotor rightBackDrive = null;
+    private IMU imu = null;
+
+    double last_rotX = 0.0;
+    double last_rotY = 0.0;
+    double last_yaw = 0.0;
+    double MAX_CHANGE = 0.5;
 
     public double applyDeadzone(double joystick) {
         double deadzone_boundary = 0.1;
@@ -23,6 +28,16 @@ public class NewDriveSystem extends OpMode {
             return 0.0;
         } else {
             return joystick;
+        }
+    }
+
+    public double skew(double input, double last_input) {
+        if (Math.signum(input) == 1 && input > last_input + MAX_CHANGE) {
+            return last_input + MAX_CHANGE;
+        } else if (Math.signum(input) == -1 && input < last_input - MAX_CHANGE) {
+            return last_input - MAX_CHANGE;
+        } else {
+            return input;
         }
     }
 
@@ -49,6 +64,7 @@ public class NewDriveSystem extends OpMode {
         imu.initialize(parameters);
     }
 
+    @Override
     public void init_loop() {
         imu.resetYaw();
     }
@@ -68,6 +84,14 @@ public class NewDriveSystem extends OpMode {
 
         double rotX = lateral * Math.cos(-heading) - axial * Math.sin(-heading);
         double rotY = lateral * Math.sin(-heading) + axial * Math.cos(-heading);
+
+        rotX = skew(rotX, last_rotX);
+        rotY = skew(rotY, last_rotY);
+        yaw = skew(yaw, last_yaw);
+
+        last_rotX = rotX;
+        last_rotY = rotY;
+        last_yaw = yaw;
 
         double leftfrontPower = rotY + rotX + yaw;
         double rightfrontPower = rotY - rotX - yaw;

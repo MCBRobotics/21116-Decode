@@ -14,19 +14,19 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 public class NewAuto extends OpMode {
 
     /* DECLARE MOTORS */
-    DcMotor leftFrontDrive = hardwareMap.get(DcMotor.class, "leftfrontdrive");
-    DcMotor leftBackDrive = hardwareMap.get(DcMotor.class, "leftbackdrive");
-    DcMotor rightFrontDrive = hardwareMap.get(DcMotor.class, "rightfrontdrive");
-    DcMotor rightBackDrive = hardwareMap.get(DcMotor.class, "rightbackdrive");
+    private final DcMotor leftFrontDrive = hardwareMap.get(DcMotor.class, "leftfrontdrive");
+    private final DcMotor leftBackDrive = hardwareMap.get(DcMotor.class, "leftbackdrive");
+    private final DcMotor rightFrontDrive = hardwareMap.get(DcMotor.class, "rightfrontdrive");
+    private final DcMotor rightBackDrive = hardwareMap.get(DcMotor.class, "rightbackdrive");
 
-    /*DECLARE POSES */
-    Pose startingPose = new Pose(72, 72, Math.toRadians(90));
-    Pose endingPose = new Pose(72, 60, Math.toRadians(270));
+    /* DECLARE POSES */
+    private final Pose startingPose = new Pose(72, 72, Math.toRadians(90));
+    private final Pose endingPose = new Pose(72, 60, Math.toRadians(270));
 
-    /*DECLARE PATHs */
-    Path firstPath = new Path(new BezierLine(startingPose, endingPose));
+    /* DECLARE PATHs */
+    private final Path firstPath = new Path(new BezierLine(startingPose, endingPose));
 
-    Follower follower = Constants.createFollower(hardwareMap);
+    private final Follower follower = Constants.createFollower(hardwareMap);
 
     @Override
     public void init() {
