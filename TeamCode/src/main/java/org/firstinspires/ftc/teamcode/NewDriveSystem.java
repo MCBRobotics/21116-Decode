@@ -20,10 +20,10 @@ public class NewDriveSystem extends OpMode {
     double last_rotX = 0.0;
     double last_rotY = 0.0;
     double last_yaw = 0.0;
-    double MAX_CHANGE = 0.3;
+    double MAX_CHANGE = 0.285;
 
     public double applyDeadzone(double joystick) {
-        double deadzone_boundary = 0.1;
+        double deadzone_boundary = 0.06;
         if (joystick < deadzone_boundary && joystick > -deadzone_boundary) {
             return 0.0;
         } else {
