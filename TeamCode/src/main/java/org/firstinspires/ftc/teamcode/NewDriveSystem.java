@@ -20,7 +20,7 @@ public class NewDriveSystem extends OpMode {
     double last_rotX = 0.0;
     double last_rotY = 0.0;
     double last_yaw = 0.0;
-    double MAX_CHANGE = 0.3;
+    double MAX_CHANGE = 0.5;
 
     // RPM tracking
     private long lastTime = 0;
@@ -28,7 +28,7 @@ public class NewDriveSystem extends OpMode {
     private static final double CPR = 28.0 * (10.0 / 3.0); // 93.33 counts per output revolution
 
     public double applyDeadzone(double joystick) {
-        double deadzone_boundary = 0.2;
+        double deadzone_boundary = 0.06;
         if (joystick < deadzone_boundary && joystick > -deadzone_boundary) {
             return 0.0;
         } else {
@@ -69,6 +69,11 @@ public class NewDriveSystem extends OpMode {
         rightFrontDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightBackDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        leftFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        leftBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        rightFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        leftBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
         imu = hardwareMap.get(IMU.class, "imu");
         IMU.Parameters parameters = new IMU.Parameters(
                 new RevHubOrientationOnRobot(
@@ -94,7 +99,7 @@ public class NewDriveSystem extends OpMode {
 
         axial = Math.signum(axial) * Math.pow(axial, 2);
         lateral = Math.signum(lateral) * Math.pow(lateral, 2);
-        yaw = Math.signum(yaw) * Math.pow(yaw, -1);
+        yaw = (Math.signum(yaw) * Math.pow(yaw, 2));
 
         YawPitchRollAngles angles = imu.getRobotYawPitchRollAngles();
         double heading = angles.getYaw(AngleUnit.RADIANS);
