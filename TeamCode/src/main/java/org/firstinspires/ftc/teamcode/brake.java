@@ -32,7 +32,7 @@ public class brake extends OpMode {
     private double[] rpmLastError  = new double[4];
     private int[]    lastTickCount = new int[4];
 
-    private static final double Kp = 0.3;
+    private static final double Kp = 0.05;
     private static final double Ki = 0.0;
     private static final double Kd = 0.0;
 
