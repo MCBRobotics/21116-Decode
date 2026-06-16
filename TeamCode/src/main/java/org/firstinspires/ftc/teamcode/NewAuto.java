@@ -11,23 +11,12 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "ExperimentalAuto", group = "Autonomous")
 public class NewAuto extends OpMode {
-
     private Follower follower;
+
+    //***** DECLARE POSES AND PATHS *****//
     PathChain firstLine, firstCurve;
-
-    enum PathState {
-        IDLE,
-        FIRST_LINE,
-        FIRST_CURVE
-    }
-    PathState currentPathState = null;
-    private void setCurrentPathState(PathState pathState) {
-        currentPathState = pathState;
-    }
-
     Pose startPose = new Pose(72, 72, Math.toRadians(90));
     Pose awayPose = new Pose(72, 100, Math.toRadians(180));
-
     private void buildPaths() {
         firstLine = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, awayPose))
@@ -41,10 +30,11 @@ public class NewAuto extends OpMode {
                 .build();
     }
 
+    //***** OP_MODE METHODS *****//
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(0.0, 0.0, Math.toRadians(0)));
+        follower.setStartingPose(startPose);
 
         buildPaths();
     }
@@ -68,7 +58,17 @@ public class NewAuto extends OpMode {
                     setCurrentPathState(PathState.IDLE);
                 }
                 break;
-            }
+        }
 
     }
+
+    //***** STATE MACHINE *****//
+    enum PathState {
+        IDLE,
+        FIRST_LINE,
+        FIRST_CURVE
+    }
+    PathState currentPathState = null;
+    private void setCurrentPathState(PathState pathState) {currentPathState = pathState;}
+
 }
