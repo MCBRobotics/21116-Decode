@@ -1,43 +1,74 @@
 package org.firstinspires.ftc.teamcode;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
+import com.pedropathing.geometry.BezierCurve;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-
+@Autonomous(name = "ExperimentalAuto", group = "Autonomous")
 public class NewAuto extends OpMode {
 
     private Follower follower;
+    PathChain firstLine, firstCurve;
 
-    Path forwardLine = new Path(
-            new BezierLine(
-                    new Pose(20.0, 100, Math.toRadians(90)),
-                    new Pose(20.0, 72, Math.toRadians(180))
-            )
-    );
+    enum PathState {
+        IDLE,
+        FIRST_LINE,
+        FIRST_CURVE
+    }
+    PathState currentPathState = null;
+    private void setCurrentPathState(PathState pathState) {
+        currentPathState = pathState;
+    }
 
+    Pose startPose = new Pose(72, 72, Math.toRadians(90));
+    Pose awayPose = new Pose(72, 100, Math.toRadians(180));
 
-    PathChain firstLine1 = new PathChain(
-            forwardLine,
-            new Path(new BezierLine(
-                    follower.getPose(),
-                    new Pose(20.0, 100, Math.toRadians(90))
-            ))
-    );
+    private void buildPaths() {
+        firstLine = follower.pathBuilder()
+                .addPath(new BezierLine(startPose, awayPose))
+                .setLinearHeadingInterpolation(startPose.getHeading(), awayPose.getHeading())
+                .addPath(new BezierLine(awayPose, startPose))
+                .setLinearHeadingInterpolation(awayPose.getHeading(), startPose.getHeading())
+                .build();
+
+        firstCurve = follower.pathBuilder()
+                .addPath(new BezierCurve(startPose, new Pose(63,83), awayPose))
+                .build();
+    }
 
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(new Pose(0.0, 0.0, Math.toRadians(0)));
+
+        buildPaths();
     }
 
     @Override
     public void loop() {
-        follower.followPath(firstLine1);
+        switch (currentPathState) {
+            case IDLE:
+                break;
+            case FIRST_LINE:
+                if (!follower.isBusy()) {
+                    follower.followPath(firstLine);
+                    follower.breakFollowing();
+                    setCurrentPathState(PathState.FIRST_CURVE);
+                }
+                break;
+            case FIRST_CURVE:
+                if (!follower.isBusy()) {
+                    follower.followPath(firstCurve);
+                    follower.breakFollowing();
+                    setCurrentPathState(PathState.IDLE);
+                }
+                break;
+            }
+
     }
 }
