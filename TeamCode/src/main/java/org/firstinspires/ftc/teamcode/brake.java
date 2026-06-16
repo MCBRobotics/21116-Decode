@@ -88,6 +88,13 @@ public class brake extends OpMode {
         while (error >  Math.PI) error -= 2.0 * Math.PI;
         while (error < -Math.PI) error += 2.0 * Math.PI;
 
+        // Don't correct if within 2 degrees — prevents constant micro-corrections
+        if (Math.abs(error) < Math.toRadians(2.0)) {
+            integralSum = 0.0;
+            lastError   = error;
+            return 0.0;
+        }
+
         double dt = Math.min(pidTimer.seconds(), 0.1);
         pidTimer.reset();
 
