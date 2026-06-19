@@ -77,7 +77,7 @@ public class IndvMotorTest extends OpMode {
             testPower = Math.max(0.0, testPower - POWER_STEP);
         }
 
-        // --- A button toggles run/stop instantly ---
+        // --- A button toggles run/stop instantly ---q
         boolean runMotor = gamepad1.a;
 
         // --- B button is emergency stop for everything ---
