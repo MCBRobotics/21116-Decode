@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.BezierCurve;
-
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "ExperimentalAuto", group = "Autonomous")
@@ -35,7 +34,7 @@ public class NewAuto extends OpMode {
     public void init() {
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
-
+        setCurrentPathState(PathState.FIRST_LINE);
         buildPaths();
     }
 
