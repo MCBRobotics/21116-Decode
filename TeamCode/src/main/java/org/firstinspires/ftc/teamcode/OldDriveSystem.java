@@ -47,16 +47,22 @@ public class OldDriveSystem extends OpMode {
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
-
     }
 
     @Override
     public void loop() {
 
+        // Deadzone
         double axial = applyDeadzone(-gamepad1.left_stick_y);
         double lateral = applyDeadzone(gamepad1.left_stick_x);
         double yaw = applyDeadzone(gamepad1.right_stick_x);
 
+        // Squared inputs for precision
+        axial   = Math.copySign(axial * axial, axial);
+        lateral = Math.copySign(lateral * lateral, lateral);
+        yaw     = Math.copySign(yaw * yaw, yaw);
+
+        // Ramping (skew)
         axial = skew(axial, last_axial);
         lateral = skew(lateral, last_lateral);
         yaw = skew(yaw, last_yaw);
@@ -65,15 +71,29 @@ public class OldDriveSystem extends OpMode {
         last_lateral = lateral;
         last_yaw = yaw;
 
+        // Mecanum math
         double leftfrontPower = axial + lateral + yaw;
         double rightfrontPower = axial - lateral - yaw;
         double leftbackPower = axial - lateral + yaw;
         double rightbackPower = axial + lateral - yaw;
 
+        // NORMALIZATION
+        double max = Math.max(
+                Math.max(Math.abs(leftfrontPower), Math.abs(rightfrontPower)),
+                Math.max(Math.abs(leftbackPower), Math.abs(rightbackPower))
+        );
+
+        if (max > 1.0) {
+            leftfrontPower  /= max;
+            rightfrontPower /= max;
+            leftbackPower   /= max;
+            rightbackPower  /= max;
+        }
+
+        // Send power to motors
         leftFrontDrive.setPower(leftfrontPower);
         rightFrontDrive.setPower(rightfrontPower);
         leftBackDrive.setPower(leftbackPower);
         rightBackDrive.setPower(rightbackPower);
-
     }
 }

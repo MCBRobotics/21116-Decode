@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
-@TeleOp(name = "Brake", group = "TeleOp")
+@TeleOp(name = "brake", group = "TeleOp")
 public class brake extends OpMode {
 
     private DcMotorEx leftFrontDrive  = null;
@@ -41,13 +41,17 @@ public class brake extends OpMode {
     private double lastError     = 0.0;
     private static final double INTEGRAL_CAP           = 1.0;
     private static final double YAW_OVERRIDE_THRESHOLD = 0.05;
+    private static final double HEADING_DEADBAND_DEG   = 3.0;
 
-    private static final double BRAKE_STRENGTH = 0.4;
-    private static final double BRAKE_DECAY    = 0.7;
+    // =========================================================================
+    // BRAKING — commented out for now, will re-enable later
+    // =========================================================================
+    // private static final double BRAKE_STRENGTH = 0.2;
+    // private static final double BRAKE_DECAY    = 0.7;
 
-    private double brake_axial   = 0.0;
-    private double brake_lateral = 0.0;
-    private double brake_yaw     = 0.0;
+    // private double brake_axial   = 0.0;
+    // private double brake_lateral = 0.0;
+    // private double brake_yaw     = 0.0;
 
     private double last_axial   = 0.0;
     private double last_lateral = 0.0;
@@ -70,16 +74,19 @@ public class brake extends OpMode {
             return input;
     }
 
-    private double computeBrake(double input, double lastInput, double lastBrake) {
-        if (input == 0.0 && lastInput != 0.0) {
-            return -lastInput * BRAKE_STRENGTH;
-        } else if (input == 0.0 && lastBrake != 0.0) {
-            double decayed = lastBrake * BRAKE_DECAY;
-            return (Math.abs(decayed) < 0.01) ? 0.0 : decayed;
-        } else {
-            return 0.0;
-        }
-    }
+    // =========================================================================
+    // BRAKING — commented out for now, will re-enable later
+    // =========================================================================
+    // private double computeBrake(double input, double lastInput, double lastBrake) {
+    //     if (input == 0.0 && lastInput != 0.0) {
+    //         return -lastInput * BRAKE_STRENGTH;
+    //     } else if (input == 0.0 && lastBrake != 0.0) {
+    //         double decayed = lastBrake * BRAKE_DECAY;
+    //         return (Math.abs(decayed) < 0.01) ? 0.0 : decayed;
+    //     } else {
+    //         return 0.0;
+    //     }
+    // }
 
     private double computeHeadingCorrection() {
         double currentHeading = pinpoint.getHeading(AngleUnit.RADIANS);
@@ -87,6 +94,12 @@ public class brake extends OpMode {
 
         while (error >  Math.PI) error -= 2.0 * Math.PI;
         while (error < -Math.PI) error += 2.0 * Math.PI;
+
+        if (Math.abs(error) < Math.toRadians(HEADING_DEADBAND_DEG)) {
+            integralSum = 0.0;
+            lastError   = error;
+            return 0.0;
+        }
 
         double dt = Math.min(pidTimer.seconds(), 0.1);
         pidTimer.reset();
@@ -194,6 +207,9 @@ public class brake extends OpMode {
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
+        // NOTE: BRAKE zero power behaviour was added to support the braking
+        // feature. Since braking is disabled for now, FLOAT is fine here —
+        // switch back to BRAKE when braking code is re-enabled.
         leftFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         leftBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         rightFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -207,8 +223,13 @@ public class brake extends OpMode {
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         pinpoint.setOffsets(120.0, -130.0);
         pinpoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+
+        // FIX: parallel deadwheel direction was reversed, causing straight-line
+        // driving to be misread as a near-full rotation (~355 degrees over 2s).
+        // Flipped first encoder to REVERSED — retest and flip the other one
+        // instead if this doesn't resolve it.
         pinpoint.setEncoderDirections(
-                GoBildaPinpointDriver.EncoderDirection.FORWARD,
+                GoBildaPinpointDriver.EncoderDirection.REVERSED,
                 GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
         pinpoint.resetPosAndIMU();
@@ -250,27 +271,45 @@ public class brake extends OpMode {
         lateral = skew(lateral, last_lateral);
         yaw     = skew(yaw,     last_yaw);
 
-        brake_axial   = computeBrake(axial,   last_axial,   brake_axial);
-        brake_lateral = computeBrake(lateral, last_lateral, brake_lateral);
-        brake_yaw     = computeBrake(yaw,     last_yaw,     brake_yaw);
+        // =====================================================================
+        // BRAKING — commented out for now, will re-enable later
+        // =====================================================================
+        // brake_axial   = computeBrake(axial,   last_axial,   brake_axial);
+        // brake_lateral = computeBrake(lateral, last_lateral, brake_lateral);
+        // brake_yaw     = computeBrake(yaw,     last_yaw,     brake_yaw);
 
         last_axial   = axial;
         last_lateral = lateral;
         last_yaw     = yaw;
 
-        double headingCorrection;
-        if (Math.abs(yaw) > YAW_OVERRIDE_THRESHOLD) {
-            targetHeading     = pinpoint.getHeading(AngleUnit.RADIANS);
-            integralSum       = 0.0;
-            lastError         = 0.0;
-            headingCorrection = 0.0;
+        boolean joysticksIdle = Math.abs(axial) < 0.05
+                && Math.abs(lateral) < 0.05
+                && Math.abs(yaw) < 0.05;
+
+        boolean pinpointHealthy = pinpoint.getDeviceStatus()
+                == GoBildaPinpointDriver.DeviceStatus.READY;
+
+        double headingCorrection = 0.0;
+
+        if (!pinpointHealthy) {
+            targetHeading = pinpoint.getHeading(AngleUnit.RADIANS);
+            integralSum   = 0.0;
+            lastError     = 0.0;
+        } else if (Math.abs(yaw) > YAW_OVERRIDE_THRESHOLD) {
+            targetHeading = pinpoint.getHeading(AngleUnit.RADIANS);
+            integralSum   = 0.0;
+            lastError     = 0.0;
+        } else if (joysticksIdle) {
+            targetHeading = pinpoint.getHeading(AngleUnit.RADIANS);
+            integralSum   = 0.0;
+            lastError     = 0.0;
         } else {
             headingCorrection = computeHeadingCorrection();
         }
 
-        double a = axial   + brake_axial;
-        double l = lateral + brake_lateral;
-        double y = yaw     + brake_yaw + headingCorrection;
+        double a = axial;   // + brake_axial;
+        double l = lateral; // + brake_lateral;
+        double y = yaw + headingCorrection; // + brake_yaw + headingCorrection;
 
         double lfPower = a + l + y;
         double rfPower = a - l - y;
@@ -284,9 +323,16 @@ public class brake extends OpMode {
                 Math.abs(getMotorRPM(rightBackDrive,  3, dt))
         };
 
+        boolean robotIsMoving = Math.abs(axial) > 0.05
+                || Math.abs(lateral) > 0.05
+                || Math.abs(yaw) > 0.05;
+
         boolean[] active  = getActiveMask(lfPower, rfPower, lbPower, rbPower);
         double[]  powers  = new double[]{lfPower, rfPower, lbPower, rbPower};
-        double[]  rpmCorrections = computeRpmCorrections(rpms, active, powers, dt);
+
+        double[] rpmCorrections = robotIsMoving
+                ? computeRpmCorrections(rpms, active, powers, dt)
+                : new double[]{0.0, 0.0, 0.0, 0.0};
 
         lfPower += rpmCorrections[0];
         rfPower += rpmCorrections[1];
@@ -298,10 +344,15 @@ public class brake extends OpMode {
         leftBackDrive.setPower(lbPower);
         rightBackDrive.setPower(rbPower);
 
+        telemetry.addData("DEBUG raw heading", pinpoint.getHeading(AngleUnit.RADIANS));
         telemetry.addData("--- Heading ---",  "");
         telemetry.addData("Heading (deg)",    Math.toDegrees(pinpoint.getHeading(AngleUnit.RADIANS)));
         telemetry.addData("Target  (deg)",    Math.toDegrees(targetHeading));
+        telemetry.addData("Error   (deg)",    Math.toDegrees(targetHeading - pinpoint.getHeading(AngleUnit.RADIANS)));
         telemetry.addData("Heading PID",      headingCorrection);
+        telemetry.addData("Heading hold",     pinpointHealthy
+                ? (joysticksIdle ? "FROZEN (idle)" : "ACTIVE")
+                : "DISABLED - check Pinpoint");
         telemetry.addData("--- RPM ---",      "");
         telemetry.addData("LF rpm | corr",   String.format("%.1f | %.4f", rpms[0], rpmCorrections[0]));
         telemetry.addData("RF rpm | corr",   String.format("%.1f | %.4f", rpms[1], rpmCorrections[1]));
