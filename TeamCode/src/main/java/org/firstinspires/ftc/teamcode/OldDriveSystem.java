@@ -3,14 +3,12 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 @TeleOp(name = "OldDriveSystem", group = "TeleOp")
 public class OldDriveSystem extends OpMode {
 
     private DcMotor leftFrontDrive = null;
     private DcMotor leftBackDrive = null;
-    private static final double TICKS_PER_MOTOR_REV = 28.0;
     private DcMotor rightFrontDrive = null;
     private DcMotor rightBackDrive = null;
 
@@ -54,12 +52,10 @@ public class OldDriveSystem extends OpMode {
     @Override
     public void loop() {
 
-        // Deadzone
         double axial = applyDeadzone(-gamepad1.left_stick_y);
         double lateral = applyDeadzone(gamepad1.left_stick_x);
         double yaw = applyDeadzone(gamepad1.right_stick_x);
-
-        // Squared inputs for precision
+        
         axial   = Math.copySign(axial * axial, axial);
         lateral = Math.copySign(lateral * lateral, lateral);
         yaw     = Math.copySign(yaw * yaw, yaw);
