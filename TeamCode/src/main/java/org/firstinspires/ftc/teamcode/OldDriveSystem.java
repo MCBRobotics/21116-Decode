@@ -52,12 +52,10 @@ public class OldDriveSystem extends OpMode {
     @Override
     public void loop() {
 
-        // Deadzone
         double axial = applyDeadzone(-gamepad1.left_stick_y);
         double lateral = applyDeadzone(gamepad1.left_stick_x);
         double yaw = applyDeadzone(gamepad1.right_stick_x);
-
-        // Squared inputs for precision
+        
         axial   = Math.copySign(axial * axial, axial);
         lateral = Math.copySign(lateral * lateral, lateral);
         yaw     = Math.copySign(yaw * yaw, yaw);
