@@ -20,15 +20,15 @@ public class shooterTest extends OpMode {
         rightServo.setPosition(0.5);
     }
     public void loop(){
-        if (gamepad1.dpad_up){
+        if (gamepad1.dpad_up) {
             leftServo.setPosition(1.0);
             rightServo.setPosition(1.0);
-        if (gamepad1.dpad_down){
+        } else if (gamepad1.dpad_down){
             leftServo.setPosition(0.0);
             rightServo.setPosition(0.0);
         if (gamepad1.a){
             shooter.setPower(1.0);
-        }
+
 
         }
         }
